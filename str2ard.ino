@@ -9,7 +9,8 @@
 
    Arduino Wire Slave for Raspberry Pi Master
    String is sent from RPi to Arduino, response is sent back.
-   I2C Wiring:
+
+   Wiring:
    RPi    Arduino
     9  GND  GND
     3  SDA  A4

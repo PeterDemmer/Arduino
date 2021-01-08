@@ -1,0 +1,62 @@
+# **************************************************************************
+#
+#   Copyright (c) 2021 Peter Demmer
+#   Permission is hereby granted, free of charge, to anyone
+#   obtaining a copy of this document and accompanying files,
+#   to do whatever they want with them without any restriction,
+#   including, but not limited to, copying, modification and redistribution.
+#   NO WARRANTY OF ANY KIND IS PROVIDED.
+#
+#   i2c4sds011.py2
+#   Wire (I2C) interface for SDS011 PM-sensor, Raspberry Pi side
+#   Arduino counterpart: i2c4sds011.ino
+#
+#   Sends string to and receives string from Arduino via I2C
+#   Usage: python2 i2c4sds011.py2 'pm;' 12
+#   Author: Peter Demmer
+#   Tested against Python 2.7.13
+#
+# **************************************************************************
+  
+
+import sys, time
+from smbus import SMBus
+
+bus = SMBus(1) # indicates /dev/ic2-1, RPi connector pin 3,5, connect to Arduino pin A4, A5
+addr = 9       # Arduino Wire bus address
+nullch = 0xFF  # incoming null character
+wrreq = 0xFE   # write -> Arduino
+rdreq = 0xFD   # read <- Arduino
+
+
+argi=sys.argv[1]
+argil = list(argi)
+wait = 12   # default PM-measurement takes 10s + 2s Wire handling
+if len(sys.argv) >= 3:
+    wait = float(sys.argv[2])
+#print "argc=", len(sys.argv), " argil=", argil, " wait=", wait
+intlist = []
+for argchar in argil:
+    intlist.append(ord(argchar))
+#print "intlist=", intlist 
+
+# writing block data starts recvEvent() in Arduino
+# 2nd parameter is 1st character of string received by Arduino
+bus.write_i2c_block_data(addr, wrreq, intlist) 
+
+#print "sent" 
+
+time.sleep(wait);
+
+# reading block data starts sendEvent() in Arduino
+rxdata = bus.read_i2c_block_data(addr, rdreq, 32);
+#print "rxdata=", rxdata  
+
+data=""
+for rxch in rxdata:
+    if rxch != nullch:
+        data += chr(rxch)
+
+print '-' + data
+
+# .-.-.
